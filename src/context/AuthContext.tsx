@@ -50,9 +50,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             loading: false,
           });
         } else {
-          // For development without Supabase, we can set a mock user
-          // Remove this in production
-          const useMockUser = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+          // Only use mock user in development when Supabase is not configured
+          const useMockUser = process.env.NODE_ENV === 'development' && !process.env.NEXT_PUBLIC_SUPABASE_URL;
           if (useMockUser) {
             setAuthState({
               user: {
@@ -65,23 +64,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               loading: false,
             });
           } else {
-            // Even if Supabase is configured, if we can't get current user, set loading to false
+            // In production or when Supabase is configured, set loading to false
             setAuthState(prev => ({ ...prev, loading: false }));
           }
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
-        // If there's an error with Supabase, fall back to mock user for development
-        setAuthState({
-          user: {
-            id: 'mock-user-id',
-            name: 'Mock User',
-            email: 'mock@example.com',
-            createdAt: new Date().toISOString(),
-          },
-          isAuthenticated: true,
-          loading: false,
-        });
+        // Only fall back to mock user in development
+        if (process.env.NODE_ENV === 'development') {
+          setAuthState({
+            user: {
+              id: 'mock-user-id',
+              name: 'Mock User',
+              email: 'mock@example.com',
+              createdAt: new Date().toISOString(),
+            },
+            isAuthenticated: true,
+            loading: false,
+          });
+        } else {
+          setAuthState(prev => ({ ...prev, loading: false }));
+        }
       }
     };
 

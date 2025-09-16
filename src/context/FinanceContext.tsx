@@ -243,12 +243,14 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
         };
         dispatch({ type: 'ADD_ACCOUNT', payload: newAccount });
       } else {
-        // Fallback to client-side ID generation if needed
-        const newAccount: Account = {
-          ...account,
-          id: Date.now().toString(),
-        };
-        dispatch({ type: 'ADD_ACCOUNT', payload: newAccount });
+        // Only use fallback in development
+        if (process.env.NODE_ENV === 'development') {
+          const newAccount: Account = {
+            ...account,
+            id: Date.now().toString(),
+          };
+          dispatch({ type: 'ADD_ACCOUNT', payload: newAccount });
+        }
       }
     } catch (error) {
       console.error('Error adding account:', error);
@@ -306,13 +308,15 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
         };
         dispatch({ type: 'ADD_TRANSACTION', payload: newTransaction });
       } else {
-        // Fallback to client-side ID generation if needed
-        const newTransaction: Transaction = {
-          ...transaction,
-          id: Date.now().toString(),
-          createdAt: new Date().toISOString(),
-        };
-        dispatch({ type: 'ADD_TRANSACTION', payload: newTransaction });
+        // Only use fallback in development
+        if (process.env.NODE_ENV === 'development') {
+          const newTransaction: Transaction = {
+            ...transaction,
+            id: Date.now().toString(),
+            createdAt: new Date().toISOString(),
+          };
+          dispatch({ type: 'ADD_TRANSACTION', payload: newTransaction });
+        }
       }
     } catch (error) {
       console.error('Error adding transaction:', error);
@@ -336,12 +340,14 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
         };
         dispatch({ type: 'ADD_BUDGET', payload: newBudget });
       } else {
-        // Fallback to client-side ID generation if needed
-        const newBudget: Budget = {
-          ...budget,
-          id: Date.now().toString(),
-        };
-        dispatch({ type: 'ADD_BUDGET', payload: newBudget });
+        // Only use fallback in development
+        if (process.env.NODE_ENV === 'development') {
+          const newBudget: Budget = {
+            ...budget,
+            id: Date.now().toString(),
+          };
+          dispatch({ type: 'ADD_BUDGET', payload: newBudget });
+        }
       }
     } catch (error) {
       console.error('Error adding budget:', error);
@@ -367,12 +373,14 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
         };
         dispatch({ type: 'ADD_BILL', payload: newBill });
       } else {
-        // Fallback to client-side ID generation if needed
-        const newBill: Bill = {
-          ...bill,
-          id: Date.now().toString(),
-        };
-        dispatch({ type: 'ADD_BILL', payload: newBill });
+        // Only use fallback in development
+        if (process.env.NODE_ENV === 'development') {
+          const newBill: Bill = {
+            ...bill,
+            id: Date.now().toString(),
+          };
+          dispatch({ type: 'ADD_BILL', payload: newBill });
+        }
       }
     } catch (error) {
       console.error('Error adding bill:', error);

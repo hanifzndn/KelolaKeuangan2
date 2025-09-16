@@ -46,15 +46,21 @@ const isSupabaseAvailable = () => {
 // Auth functions
 export const signUp = async (email: string, password: string, name: string) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.')
-    // Return mock data for development
-    return {
-      user: {
-        id: 'mock-user-id',
-        email,
-        created_at: new Date().toISOString(),
-        user_metadata: { name }
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.')
+      // Return mock data for development
+      return {
+        user: {
+          id: 'mock-user-id',
+          email,
+          created_at: new Date().toISOString(),
+          user_metadata: { name }
+        }
       }
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
     }
   }
 
@@ -101,15 +107,21 @@ export const signUp = async (email: string, password: string, name: string) => {
 
 export const signIn = async (email: string, password: string) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.')
-    // Return mock data for development
-    return {
-      user: {
-        id: 'mock-user-id',
-        email,
-        created_at: new Date().toISOString(),
-        user_metadata: { name: 'Mock User' }
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.')
+      // Return mock data for development
+      return {
+        user: {
+          id: 'mock-user-id',
+          email,
+          created_at: new Date().toISOString(),
+          user_metadata: { name: 'Mock User' }
+        }
       }
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
     }
   }
 
@@ -138,8 +150,14 @@ export const signIn = async (email: string, password: string) => {
 
 export const signOut = async () => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.')
-    return
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.')
+      return
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   const { error } = await supabase.auth.signOut()
@@ -150,8 +168,14 @@ export const signOut = async () => {
 
 export const getCurrentUser = async () => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.')
-    return null
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.')
+      return null
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -161,13 +185,19 @@ export const getCurrentUser = async () => {
 // Data functions
 export const getAccounts = async (userId: string) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.')
-    // Return mock data for development
-    return [
-      { id: '1', name: 'Cash', type: 'cash' as const, balance: 5000000, currency: 'IDR' },
-      { id: '2', name: 'Bank Account', type: 'bank' as const, balance: 15000000, currency: 'IDR' },
-      { id: '3', name: 'Credit Card', type: 'credit' as const, balance: -2000000, currency: 'IDR' },
-    ]
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.')
+      // Return mock data for development
+      return [
+        { id: '1', name: 'Cash', type: 'cash' as const, balance: 5000000, currency: 'IDR' },
+        { id: '2', name: 'Bank Account', type: 'bank' as const, balance: 15000000, currency: 'IDR' },
+        { id: '3', name: 'Credit Card', type: 'credit' as const, balance: -2000000, currency: 'IDR' },
+      ]
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   const { data, error } = await supabase
@@ -187,8 +217,14 @@ export const getAccounts = async (userId: string) => {
 
 export const addAccount = async (userId: string, account: Omit<Account, 'id'>) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.');
-    return
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.');
+      return
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   // Validate that the required fields are provided
@@ -226,8 +262,14 @@ export const addAccount = async (userId: string, account: Omit<Account, 'id'>) =
 
 export const updateAccount = async (account: Account) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.')
-    return
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.')
+      return
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   // Convert the account data to match the database schema
@@ -251,8 +293,14 @@ export const updateAccount = async (account: Account) => {
 
 export const deleteAccount = async (accountId: string) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.')
-    return
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.')
+      return
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   const { error } = await supabase
@@ -268,50 +316,56 @@ export const deleteAccount = async (accountId: string) => {
 
 export const getTransactions = async (userId: string) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.')
-    // Return mock data for development
-    return [
-      { 
-        id: '1', 
-        accountId: '1', 
-        categoryId: '1', 
-        amount: 5000000, 
-        description: 'Monthly Salary', 
-        date: '2025-09-01', 
-        type: 'income' as const, 
-        createdAt: '2025-09-01T09:00:00Z' 
-      },
-      { 
-        id: '2', 
-        accountId: '1', 
-        categoryId: '3', 
-        amount: 1500000, 
-        description: 'Grocery Shopping', 
-        date: '2025-09-05', 
-        type: 'expense' as const, 
-        createdAt: '2025-09-05T18:30:00Z' 
-      },
-      { 
-        id: '3', 
-        accountId: '1', 
-        categoryId: '4', 
-        amount: 300000, 
-        description: 'Gasoline', 
-        date: '2025-09-10', 
-        type: 'expense' as const, 
-        createdAt: '2025-09-10T08:15:00Z' 
-      },
-      { 
-        id: '4', 
-        accountId: '2', 
-        categoryId: '2', 
-        amount: 2000000, 
-        description: 'Freelance Project', 
-        date: '2025-09-15', 
-        type: 'income' as const, 
-        createdAt: '2025-09-15T14:20:00Z' 
-      },
-    ]
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.')
+      // Return mock data for development
+      return [
+        { 
+          id: '1', 
+          accountId: '1', 
+          categoryId: '1', 
+          amount: 5000000, 
+          description: 'Monthly Salary', 
+          date: '2025-09-01', 
+          type: 'income' as const, 
+          createdAt: '2025-09-01T09:00:00Z' 
+        },
+        { 
+          id: '2', 
+          accountId: '1', 
+          categoryId: '3', 
+          amount: 1500000, 
+          description: 'Grocery Shopping', 
+          date: '2025-09-05', 
+          type: 'expense' as const, 
+          createdAt: '2025-09-05T18:30:00Z' 
+        },
+        { 
+          id: '3', 
+          accountId: '1', 
+          categoryId: '4', 
+          amount: 300000, 
+          description: 'Gasoline', 
+          date: '2025-09-10', 
+          type: 'expense' as const, 
+          createdAt: '2025-09-10T08:15:00Z' 
+        },
+        { 
+          id: '4', 
+          accountId: '2', 
+          categoryId: '2', 
+          amount: 2000000, 
+          description: 'Freelance Project', 
+          date: '2025-09-15', 
+          type: 'income' as const, 
+          createdAt: '2025-09-15T14:20:00Z' 
+        },
+      ]
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   const { data, error } = await supabase
@@ -332,8 +386,14 @@ export const getTransactions = async (userId: string) => {
 
 export const addTransaction = async (userId: string, transaction: Omit<Transaction, 'id' | 'createdAt'>) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.');
-    return
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.');
+      return
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   // Validate that the required fields are provided and are valid
@@ -388,8 +448,14 @@ export const addTransaction = async (userId: string, transaction: Omit<Transacti
 
 export const deleteTransaction = async (transactionId: string) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.')
-    return
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.')
+      return
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   const { error } = await supabase
@@ -405,26 +471,32 @@ export const deleteTransaction = async (transactionId: string) => {
 
 export const getBudgets = async (userId: string) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.')
-    // Return mock data for development
-    return [
-      { 
-        id: '1', 
-        categoryId: '3', 
-        amount: 2000000, 
-        period: 'monthly' as const, 
-        startDate: '2025-09-01', 
-        endDate: '2025-09-30' 
-      },
-      { 
-        id: '2', 
-        categoryId: '4', 
-        amount: 500000, 
-        period: 'monthly' as const, 
-        startDate: '2025-09-01', 
-        endDate: '2025-09-30' 
-      },
-    ]
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.')
+      // Return mock data for development
+      return [
+        { 
+          id: '1', 
+          categoryId: '3', 
+          amount: 2000000, 
+          period: 'monthly' as const, 
+          startDate: '2025-09-01', 
+          endDate: '2025-09-30' 
+        },
+        { 
+          id: '2', 
+          categoryId: '4', 
+          amount: 500000, 
+          period: 'monthly' as const, 
+          startDate: '2025-09-01', 
+          endDate: '2025-09-30' 
+        },
+      ]
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   const { data, error } = await supabase
@@ -446,8 +518,14 @@ export const getBudgets = async (userId: string) => {
 
 export const addBudget = async (userId: string, budget: Omit<Budget, 'id'>) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.');
-    return
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.');
+      return
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   // Validate that the required fields are provided and are valid
@@ -502,37 +580,43 @@ export const addBudget = async (userId: string, budget: Omit<Budget, 'id'>) => {
 
 export const getBills = async (userId: string) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.')
-    // Return mock data for development
-    return [
-      { 
-        id: '1', 
-        name: 'Electricity Bill', 
-        amount: 500000, 
-        dueDate: 10, 
-        accountId: '2', 
-        categoryId: '7', 
-        isActive: true 
-      },
-      { 
-        id: '2', 
-        name: 'Water Bill', 
-        amount: 200000, 
-        dueDate: 15, 
-        accountId: '2', 
-        categoryId: '7', 
-        isActive: true 
-      },
-      { 
-        id: '3', 
-        name: 'Internet/WiFi', 
-        amount: 300000, 
-        dueDate: 5, 
-        accountId: '2', 
-        categoryId: '7', 
-        isActive: true 
-      },
-    ]
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.')
+      // Return mock data for development
+      return [
+        { 
+          id: '1', 
+          name: 'Electricity Bill', 
+          amount: 500000, 
+          dueDate: 10, 
+          accountId: '2', 
+          categoryId: '7', 
+          isActive: true 
+        },
+        { 
+          id: '2', 
+          name: 'Water Bill', 
+          amount: 200000, 
+          dueDate: 15, 
+          accountId: '2', 
+          categoryId: '7', 
+          isActive: true 
+        },
+        { 
+          id: '3', 
+          name: 'Internet/WiFi', 
+          amount: 300000, 
+          dueDate: 5, 
+          accountId: '2', 
+          categoryId: '7', 
+          isActive: true 
+        },
+      ]
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   const { data, error } = await supabase
@@ -554,8 +638,14 @@ export const getBills = async (userId: string) => {
 
 export const addBill = async (userId: string, bill: Omit<Bill, 'id'>) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.');
-    return
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.');
+      return
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   // Validate that the required fields are provided and are valid
@@ -600,8 +690,14 @@ export const addBill = async (userId: string, bill: Omit<Bill, 'id'>) => {
 
 export const updateBill = async (bill: Bill) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.');
-    return
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.');
+      return
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   // Validate that the required fields are provided and are valid
@@ -647,8 +743,14 @@ export const updateBill = async (bill: Bill) => {
 
 export const deleteBill = async (billId: string) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.')
-    return
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.')
+      return
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   const { error } = await supabase
@@ -665,8 +767,14 @@ export const deleteBill = async (billId: string) => {
 // Add Category function
 export const addCategory = async (userId: string, category: Omit<Category, 'id'>) => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.');
-    return
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.');
+      return
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.')
+    }
   }
 
   // Validate that the required fields are provided
@@ -703,9 +811,15 @@ export const addCategory = async (userId: string, category: Omit<Category, 'id'>
 // Get Categories function (to refresh categories after adding new ones)
 export const getCategories = async () => {
   if (!isSupabaseAvailable() || !supabase) {
-    console.warn('Supabase is not configured. Using mock data.');
-    // Return mock data for development
-    return initialCategories;
+    // Only use mock data in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Supabase is not configured. Using mock data.');
+      // Return mock data for development
+      return initialCategories;
+    } else {
+      // In production, throw an error if Supabase is not available
+      throw new Error('Supabase is not configured. Please check your environment variables.');
+    }
   }
 
   const { data, error } = await supabase
