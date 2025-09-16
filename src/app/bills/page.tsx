@@ -19,18 +19,30 @@ function BillsContent() {
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [accountId, setAccountId] = useState(accounts[0]?.id || '');
+  const [accountId, setAccountId] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
   const [error, setError] = useState('');
 
-  // Find the Utilities category for default selection
+  // Set default account and category when accounts/categories load
   useEffect(() => {
-    const utilitiesCategory = categories.find(cat => cat.name === 'Utilities');
-    if (utilitiesCategory) {
-      setCategoryId(utilitiesCategory.id);
+    if (accounts.length > 0 && !accountId) {
+      setAccountId(accounts[0].id);
     }
-  }, [categories]);
+    
+    if (categories.length > 0 && !categoryId) {
+      const utilitiesCategory = categories.find(cat => cat.name === 'Utilities');
+      if (utilitiesCategory) {
+        setCategoryId(utilitiesCategory.id);
+      } else {
+        // Set to first expense category if Utilities not found
+        const expenseCategory = categories.find(cat => cat.type === 'expense');
+        if (expenseCategory) {
+          setCategoryId(expenseCategory.id);
+        }
+      }
+    }
+  }, [accounts, categories, accountId, categoryId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,19 +52,41 @@ function BillsContent() {
       return;
     }
     
-    const billData: Bill = {
-      id: editingBill ? editingBill.id : Date.now().toString(),
-      name,
-      amount: parseFloat(amount),
-      dueDate: parseInt(dueDate),
-      accountId,
-      categoryId,
-      isActive: true,
-    };
+    // Validate that accountId and categoryId are valid UUIDs
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(accountId)) {
+      setError('Invalid account selection');
+      return;
+    }
     
+    if (!uuidRegex.test(categoryId)) {
+      setError('Invalid category selection');
+      return;
+    }
+    
+    // For adding new bills, don't include the id field
+    // For editing bills, include all fields
     if (editingBill) {
+      const billData: Bill = {
+        id: editingBill.id,
+        name,
+        amount: parseFloat(amount),
+        dueDate: parseInt(dueDate),
+        accountId,
+        categoryId,
+        isActive: true,
+      };
       updateBill(billData);
     } else {
+      // Omit the id field for new bills
+      const billData = {
+        name,
+        amount: parseFloat(amount),
+        dueDate: parseInt(dueDate),
+        accountId,
+        categoryId,
+        isActive: true,
+      };
       addBill(billData);
     }
     
@@ -133,6 +167,21 @@ function BillsContent() {
               setName('');
               setAmount('');
               setDueDate('');
+              // Set default values when opening the form
+              if (accounts.length > 0) {
+                setAccountId(accounts[0].id);
+              }
+              if (categories.length > 0) {
+                const utilitiesCategory = categories.find(cat => cat.name === 'Utilities');
+                if (utilitiesCategory) {
+                  setCategoryId(utilitiesCategory.id);
+                } else {
+                  const expenseCategory = categories.find(cat => cat.type === 'expense');
+                  if (expenseCategory) {
+                    setCategoryId(expenseCategory.id);
+                  }
+                }
+              }
               setEditingBill(null);
               setError('');
               setActiveTab('add');
@@ -314,7 +363,8 @@ function BillsContent() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="form-input"
-                    placeholder="e.g., Electricity Bill"
+                    placeholder="&nbsp;&nbsp;e.g., Electricity Bill"
+                    required
                   />
                 </div>
                 
@@ -326,7 +376,8 @@ function BillsContent() {
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       className="form-input"
-                      placeholder="0"
+                      placeholder="&nbsp;&nbsp;0"
+                      required
                     />
                   </div>
                   
@@ -339,7 +390,8 @@ function BillsContent() {
                       value={dueDate}
                       onChange={(e) => setDueDate(e.target.value)}
                       className="form-input"
-                      placeholder="e.g., 10"
+                      placeholder="&nbsp;&nbsp;e.g., 10"
+                      required
                     />
                   </div>
                 </div>
@@ -351,7 +403,9 @@ function BillsContent() {
                       value={accountId}
                       onChange={(e) => setAccountId(e.target.value)}
                       className="form-select"
+                      required
                     >
+                      <option value="">Select an account</option>
                       {accounts.map(account => (
                         <option key={account.id} value={account.id}>{account.name}</option>
                       ))}
@@ -364,7 +418,9 @@ function BillsContent() {
                       value={categoryId}
                       onChange={(e) => setCategoryId(e.target.value)}
                       className="form-select"
+                      required
                     >
+                      <option value="">Select a category</option>
                       {categories
                         .filter(category => category.type === 'expense')
                         .map(category => (

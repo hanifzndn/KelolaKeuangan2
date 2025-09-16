@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   
   const { login } = useAuth();
@@ -18,16 +19,21 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
     
     try {
-      const success = await login(email, password);
-      if (success) {
-        router.push('/');
+      const result = await login(email, password);
+      if (result.success) {
+        setSuccess('Login berhasil! Mengarahkan ke dashboard...');
+        setTimeout(() => {
+          router.push('/');
+        }, 1000);
       } else {
-        setError('Email atau password salah');
+        setError(result.error || 'Email atau password salah');
       }
     } catch (err) {
       setError('Terjadi kesalahan saat login');
+      console.error('Login error:', err);
     } finally {
       setLoading(false);
     }
@@ -54,9 +60,20 @@ export default function LoginPage() {
               <div className="alert alert-danger mb-6">
                 <div className="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                   <span>{error}</span>
+                </div>
+              </div>
+            )}
+            
+            {success && (
+              <div className="alert alert-success mb-6">
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span>{success}</span>
                 </div>
               </div>
             )}
@@ -79,7 +96,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="form-input pl-10"
-                    placeholder="you@example.com"
+                    placeholder="&nbsp;&nbsp;contoh@email.com"
                   />
                 </div>
               </div>
@@ -101,7 +118,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="form-input pl-10"
-                    placeholder="••••••••"
+                    placeholder="&nbsp;&nbsp;Masukkan password Anda"
                   />
                 </div>
               </div>

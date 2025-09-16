@@ -1,7 +1,7 @@
-// scripts/generate-icons.js
+// scripts/convert-icons.js
+const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
-const sharp = require('sharp');
 
 // Create icons directory if it doesn't exist
 const iconsDir = path.join(__dirname, '..', 'public', 'icons');
@@ -9,24 +9,17 @@ if (!fs.existsSync(iconsDir)) {
   fs.mkdirSync(iconsDir, { recursive: true });
 }
 
-// Create a simple SVG icon
-const svgIcon = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
-  <rect width="192" height="192" fill="#3b82f6" rx="20"/>
-  <circle cx="96" cy="80" r="20" fill="white"/>
-  <rect x="76" y="110" width="40" height="60" fill="white" rx="5"/>
-</svg>
-`;
-
-// Write the SVG file
-fs.writeFileSync(path.join(iconsDir, 'icon.svg'), svgIcon.trim());
-
 // Define sizes for PNG icons
 const sizes = [192, 256, 384, 512];
 
 // Convert SVG to PNG for each size
 async function convertIcons() {
   const svgPath = path.join(iconsDir, 'icon.svg');
+  
+  if (!fs.existsSync(svgPath)) {
+    console.error('SVG icon not found. Please run generate-icons.js first.');
+    return;
+  }
   
   for (const size of sizes) {
     try {
@@ -41,8 +34,7 @@ async function convertIcons() {
     }
   }
   
-  console.log('SVG icon and all PNG icons created successfully!');
-  console.log('Icons are now ready for PWA usage.');
+  console.log('All PNG icons created successfully!');
 }
 
 convertIcons();

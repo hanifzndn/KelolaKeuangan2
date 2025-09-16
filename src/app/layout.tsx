@@ -17,11 +17,14 @@ export const metadata: Metadata = {
     icon: '/icons/icon-192x192.png',
     apple: '/icons/icon-192x192.png',
   },
+  // Updated PWA configuration with modern approach
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: 'Dompet Keluarga',
   },
+  // Add modern web app capabilities
+  applicationName: 'Dompet Keluarga',
 };
 
 export default function RootLayout({
@@ -35,6 +38,10 @@ export default function RootLayout({
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <meta name="theme-color" content="#3b82f6" />
+        {/* Modern meta tag for web app capability */}
+        <meta name="mobile-web-app-capable" content="yes" />
+        {/* Format detection for telephone numbers */}
+        <meta name="format-detection" content="telephone=no" />
       </head>
       <body className={inter.className}>
         <AuthProvider>

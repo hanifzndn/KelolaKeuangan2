@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   
   const { register } = useAuth();
@@ -20,6 +21,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
     
     // Validate passwords match
     if (password !== confirmPassword) {
@@ -36,14 +38,19 @@ export default function RegisterPage() {
     }
     
     try {
-      const success = await register(name, email, password);
-      if (success) {
-        router.push('/');
+      const result = await register(name, email, password);
+      if (result.success) {
+        setSuccess(result.error || 'Registrasi berhasil! Anda sekarang sudah masuk.');
+        // Redirect to dashboard after successful registration
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
       } else {
-        setError('Email sudah terdaftar');
+        setError(result.error || 'Email sudah terdaftar');
       }
     } catch (err) {
       setError('Terjadi kesalahan saat registrasi');
+      console.error('Registration error:', err);
     } finally {
       setLoading(false);
     }
@@ -77,6 +84,17 @@ export default function RegisterPage() {
               </div>
             )}
             
+            {success && (
+              <div className="alert alert-success mb-6">
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span>{success}</span>
+                </div>
+              </div>
+            )}
+            
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="name" className="form-label">Nama Lengkap</label>
@@ -94,7 +112,7 @@ export default function RegisterPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="form-input pl-10"
-                    placeholder="Nama lengkap Anda"
+                    placeholder="&nbsp;&nbsp;Nama lengkap Anda"
                   />
                 </div>
               </div>
@@ -116,7 +134,7 @@ export default function RegisterPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="form-input pl-10"
-                    placeholder="you@example.com"
+                    placeholder="&nbsp;&nbsp;contoh@email.com"
                   />
                 </div>
               </div>
@@ -137,7 +155,7 @@ export default function RegisterPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="form-input pl-10"
-                    placeholder="••••••••"
+                    placeholder="&nbsp;&nbsp;Masukkan password Anda"
                   />
                 </div>
                 <p className="mt-1 text-xs text-gray-500">Minimal 6 karakter</p>
@@ -159,7 +177,7 @@ export default function RegisterPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className="form-input pl-10"
-                    placeholder="••••••••"
+                    placeholder="&nbsp;&nbsp;Konfirmasi password Anda"
                   />
                 </div>
               </div>

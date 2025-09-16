@@ -2,6 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { signUp, signIn, signOut, getCurrentUser } from '../lib/supabaseData';
 
 interface User {
   id: string;
@@ -13,13 +14,14 @@ interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
+  loading: boolean;
 }
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  updateProfile: (name: string) => void;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  register: (name: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  updateProfile: (name: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,108 +30,175 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     isAuthenticated: false,
+    loading: true,
   });
 
-  // Initialize auth state from localStorage
+  // Initialize auth state
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const storedAuth = localStorage.getItem('isAuthenticated');
-    
-    if (storedUser && storedAuth === 'true') {
+    const initAuth = async () => {
       try {
+        const user = await getCurrentUser();
+        if (user) {
+          setAuthState({
+            user: {
+              id: user.id,
+              name: user.user_metadata?.name || '',
+              email: user.email || '',
+              createdAt: user.created_at,
+            },
+            isAuthenticated: true,
+            loading: false,
+          });
+        } else {
+          // For development without Supabase, we can set a mock user
+          // Remove this in production
+          const useMockUser = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+          if (useMockUser) {
+            setAuthState({
+              user: {
+                id: 'mock-user-id',
+                name: 'Mock User',
+                email: 'mock@example.com',
+                createdAt: new Date().toISOString(),
+              },
+              isAuthenticated: true,
+              loading: false,
+            });
+          } else {
+            // Even if Supabase is configured, if we can't get current user, set loading to false
+            setAuthState(prev => ({ ...prev, loading: false }));
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        // If there's an error with Supabase, fall back to mock user for development
         setAuthState({
-          user: JSON.parse(storedUser),
+          user: {
+            id: 'mock-user-id',
+            name: 'Mock User',
+            email: 'mock@example.com',
+            createdAt: new Date().toISOString(),
+          },
           isAuthenticated: true,
+          loading: false,
         });
-      } catch (e) {
-        console.error('Failed to parse stored user data', e);
       }
-    }
+    };
+
+    initAuth();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // In a real app, this would be an API call
-    // For this demo, we'll simulate authentication
-    
-    // Check if user exists in localStorage
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const user = users.find((u: any) => u.email === email && u.password === password);
-    
-    if (user) {
-      const userData = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
-      };
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      // Basic email validation
+      if (!email || !email.includes('@')) {
+        return { success: false, error: 'Please enter a valid email address' };
+      }
       
+      // Basic password validation
+      if (!password || password.length < 6) {
+        return { success: false, error: 'Password must be at least 6 characters long' };
+      }
+
+      const response = await signIn(email, password);
+      if (response.user) {
+        setAuthState({
+          user: {
+            id: response.user.id,
+            name: response.user.user_metadata?.name || '',
+            email: response.user.email || '',
+            createdAt: response.user.created_at,
+          },
+          isAuthenticated: true,
+          loading: false,
+        });
+        return { success: true };
+      }
+      return { success: false, error: 'Invalid credentials' };
+    } catch (error: any) {
+      console.error('Login error:', error);
+      // Handle specific Supabase errors
+      if (error?.message) {
+        // Check if it's a generic "Invalid login credentials" error
+        if (error.message.includes('Invalid login credentials')) {
+          return { success: false, error: 'Invalid email or password. Please check your credentials and try again.' };
+        }
+        return { success: false, error: error.message };
+      }
+      return { success: false, error: 'Login failed. Please try again.' };
+    }
+  };
+
+  const register = async (name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      // Basic email validation
+      if (!email || !email.includes('@')) {
+        return { success: false, error: 'Please enter a valid email address' };
+      }
+      
+      // Basic password validation
+      if (!password || password.length < 6) {
+        return { success: false, error: 'Password must be at least 6 characters long' };
+      }
+      
+      // Basic name validation
+      if (!name || name.trim().length === 0) {
+        return { success: false, error: 'Please enter your name' };
+      }
+
+      const response = await signUp(email, password, name);
+      if (response.user) {
+        // Set user as authenticated immediately without email confirmation
+        setAuthState({
+          user: {
+            id: response.user.id,
+            name,
+            email,
+            createdAt: response.user.created_at,
+          },
+          isAuthenticated: true,
+          loading: false,
+        });
+        
+        return { 
+          success: true,
+          error: 'Registration successful! You are now logged in.' 
+        };
+      }
+      return { success: false, error: 'Registration failed' };
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      // Handle specific Supabase errors
+      if (error?.message) {
+        // Check for common Supabase auth errors
+        if (error.message.includes('Email address')) {
+          return { success: false, error: 'The email address is not valid or not allowed. Please use a different email address.' };
+        }
+        if (error.message.includes('rate limit')) {
+          return { success: false, error: 'Too many requests. Please try again later.' };
+        }
+        return { success: false, error: error.message };
+      }
+      return { success: false, error: 'Registration failed. Please try again.' };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await signOut();
       setAuthState({
-        user: userData,
-        isAuthenticated: true,
+        user: null,
+        isAuthenticated: false,
+        loading: false,
       });
-      
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('isAuthenticated', 'true');
-      
-      return true;
+    } catch (error) {
+      console.error('Logout error:', error);
     }
-    
-    return false;
   };
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
-    // Check if user already exists
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const existingUser = users.find((u: any) => u.email === email);
-    
-    if (existingUser) {
-      return false; // User already exists
-    }
-    
-    // Create new user
-    const newUser = {
-      id: Date.now().toString(),
-      name,
-      email,
-      password, // In a real app, this should be hashed
-      createdAt: new Date().toISOString(),
-    };
-    
-    // Save user to localStorage
-    const updatedUsers = [...users, newUser];
-    localStorage.setItem('users', JSON.stringify(updatedUsers));
-    
-    // Automatically log in the user
-    const userData = {
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-      createdAt: newUser.createdAt,
-    };
-    
-    setAuthState({
-      user: userData,
-      isAuthenticated: true,
-    });
-    
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('isAuthenticated', 'true');
-    
-    return true;
-  };
-
-  const logout = () => {
-    setAuthState({
-      user: null,
-      isAuthenticated: false,
-    });
-    
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAuthenticated');
-  };
-
-  const updateProfile = (name: string) => {
+  const updateProfile = async (name: string) => {
     if (authState.user) {
+      // In a real app, you would update the user profile in Supabase here
       const updatedUser = {
         ...authState.user,
         name,
@@ -139,15 +208,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         ...authState,
         user: updatedUser,
       });
-      
-      localStorage.setItem('user', JSON.stringify(updatedUser));
-      
-      // Update user in users array
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      const updatedUsers = users.map((u: any) => 
-        u.id === updatedUser.id ? { ...u, name } : u
-      );
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
     }
   };
 

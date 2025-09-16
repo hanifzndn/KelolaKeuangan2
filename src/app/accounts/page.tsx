@@ -13,8 +13,10 @@ export default function AccountsPage() {
 }
 
 function AccountsContent() {
-  const { accounts, addAccount } = useFinance();
+  const { accounts, addAccount, updateAccount, deleteAccount } = useFinance();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<any>(null);
   const [name, setName] = useState('');
   const [type, setType] = useState<'cash' | 'bank' | 'credit' | 'investment'>('cash');
   const [balance, setBalance] = useState('');
@@ -25,7 +27,6 @@ function AccountsContent() {
     if (!name || !balance) return;
     
     const newAccount = {
-      id: Date.now().toString(),
       name,
       type,
       balance: parseFloat(balance),
@@ -33,8 +34,44 @@ function AccountsContent() {
     };
     
     addAccount(newAccount);
+    resetForm();
+  };
+
+  const handleEditAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingAccount || !name || !balance) return;
+    
+    const updatedAccount = {
+      ...editingAccount,
+      name,
+      type,
+      balance: parseFloat(balance),
+    };
+    
+    updateAccount(updatedAccount);
+    resetForm();
+    setShowEditForm(false);
+  };
+
+  const handleDeleteAccount = (accountId: string) => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus akun ini?')) {
+      deleteAccount(accountId);
+    }
+  };
+
+  const resetForm = () => {
     setName('');
+    setType('cash');
     setBalance('');
+  };
+
+  const startEditing = (account: any) => {
+    setEditingAccount(account);
+    setName(account.name);
+    setType(account.type);
+    setBalance(account.balance.toString());
+    setShowEditForm(true);
     setShowAddForm(false);
   };
 
@@ -47,7 +84,11 @@ function AccountsContent() {
             <p className="text-gray-600 mt-2">Kelola semua akun keuangan Anda</p>
           </div>
           <button
-            onClick={() => setShowAddForm(!showAddForm)}
+            onClick={() => {
+              resetForm();
+              setShowAddForm(!showAddForm);
+              setShowEditForm(false);
+            }}
             className="btn btn-primary mt-4 md:mt-0"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -57,14 +98,14 @@ function AccountsContent() {
           </button>
         </div>
 
-        {/* Add Account Form */}
-        {showAddForm && (
+        {/* Add/Edit Account Form */}
+        {(showAddForm || showEditForm) && (
           <div className="card mb-8">
             <div className="card-header">
-              <h2 className="card-title">Tambah Akun Baru</h2>
+              <h2 className="card-title">{showEditForm ? 'Edit Akun' : 'Tambah Akun Baru'}</h2>
             </div>
             <div className="card-body">
-              <form onSubmit={handleAddAccount} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form onSubmit={showEditForm ? handleEditAccount : handleAddAccount} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="form-label">Nama Akun</label>
                   <input
@@ -108,7 +149,7 @@ function AccountsContent() {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    Simpan Akun
+                    {showEditForm ? 'Update Akun' : 'Simpan Akun'}
                   </button>
                 </div>
               </form>
@@ -164,8 +205,19 @@ function AccountsContent() {
                     }`}>
                       Rp {account.balance.toLocaleString()}
                     </p>
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <p className="text-xs text-gray-500">ID: {account.id}</p>
+                    <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between">
+                      <button
+                        onClick={() => startEditing(account)}
+                        className="text-blue-500 hover:text-blue-700 text-sm font-medium"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAccount(account.id)}
+                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                      >
+                        Hapus
+                      </button>
                     </div>
                   </div>
                 ))}

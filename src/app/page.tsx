@@ -15,7 +15,7 @@ export default function Home() {
 }
 
 function DashboardContent() {
-  const { accounts, categories, transactions, budgets, bills, addTransaction, addAccount, addBudget, getUpcomingBills } = useFinance();
+  const { accounts, categories, transactions, budgets, bills, addTransaction, addAccount, addBudget, addCategory, getUpcomingBills } = useFinance();
   const { user, logout } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'overview' | 'accounts' | 'transactions' | 'budgets'>('overview');
@@ -27,6 +27,11 @@ function DashboardContent() {
   const [accountId, setAccountId] = useState(accounts[0]?.id || '');
   const [categoryId, setCategoryId] = useState(categories.filter(c => c.type === 'expense')[0]?.id || '');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  
+  // Custom category states
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
+  const [customCategoryName, setCustomCategoryName] = useState('');
+  const [customCategoryIcon, setCustomCategoryIcon] = useState('📋');
 
   const handleAddTransaction = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,20 +39,35 @@ function DashboardContent() {
     if (!description || !amount || !accountId || !categoryId) return;
     
     const newTransaction = {
-      id: Date.now().toString(),
       accountId,
       categoryId,
       amount: parseFloat(amount),
       description,
       date,
       type,
-      createdAt: new Date().toISOString(),
     };
     
     addTransaction(newTransaction);
     setDescription('');
     setAmount('');
     setDate(new Date().toISOString().split('T')[0]);
+  };
+
+  const handleAddCustomCategory = () => {
+    if (!customCategoryName) return;
+    
+    const newCategory = {
+      name: customCategoryName,
+      type: type, // Use the same type as the transaction
+      icon: customCategoryIcon,
+      color: type === 'income' ? 'bg-green-500' : 'bg-red-500',
+    };
+    
+    addCategory(newCategory);
+    setCustomCategoryName('');
+    setShowCustomCategory(false);
+    // Set the new category as selected
+    // Note: We'll need to refresh the categories to get the new one
   };
 
   // Calculate financial summary
@@ -146,7 +166,7 @@ function DashboardContent() {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Transaksi
+            Pencatatan Transaksi
           </button>
           <button
             onClick={() => setActiveTab('budgets')}
@@ -492,7 +512,7 @@ function DashboardContent() {
             {/* Add Transaction Form */}
             <div className="card">
               <div className="card-header">
-                <h2 className="card-title">Tambah Transaksi</h2>
+                <h2 className="card-title">Pencatatan Transaksi</h2>
               </div>
               <div className="card-body">
                 <form onSubmit={handleAddTransaction} className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -522,7 +542,11 @@ function DashboardContent() {
                     <label className="form-label">Tipe</label>
                     <select
                       value={type}
-                      onChange={(e) => setType(e.target.value as 'income' | 'expense')}
+                      onChange={(e) => {
+                        setType(e.target.value as 'income' | 'expense');
+                        // Reset category when type changes
+                        setCategoryId('');
+                      }}
                       className="form-select"
                     >
                       <option value="income">Pendapatan</option>
@@ -537,6 +561,7 @@ function DashboardContent() {
                       className="form-select"
                       required
                     >
+                      <option value="">Pilih Akun</option>
                       {accounts.map(account => (
                         <option key={account.id} value={account.id}>{account.name}</option>
                       ))}
@@ -544,20 +569,90 @@ function DashboardContent() {
                   </div>
                   <div>
                     <label className="form-label">Kategori</label>
-                    <select
-                      value={categoryId}
-                      onChange={(e) => setCategoryId(e.target.value)}
-                      className="form-select"
-                      required
-                    >
-                      {categories
-                        .filter(category => category.type === type)
-                        .map(category => (
-                          <option key={category.id} value={category.id}>
-                            {category.icon} {category.name}
-                          </option>
-                        ))}
-                    </select>
+                    <div className="flex space-x-2">
+                      <select
+                        value={categoryId}
+                        onChange={(e) => setCategoryId(e.target.value)}
+                        className="form-select flex-grow"
+                        required
+                      >
+                        <option value="">Pilih Kategori</option>
+                        {categories
+                          .filter(category => category.type === type)
+                          .map(category => (
+                            <option key={category.id} value={category.id}>
+                              {category.icon} {category.name}
+                            </option>
+                          ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setShowCustomCategory(!showCustomCategory)}
+                        className="btn btn-outline"
+                        title="Tambah Kategori Baru"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                      </button>
+                    </div>
+                    
+                    {/* Custom Category Form */}
+                    {showCustomCategory && (
+                      <div className="mt-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                        <h4 className="font-medium text-gray-800 mb-2">Tambah Kategori Baru</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="form-label text-sm">Nama Kategori</label>
+                            <input
+                              type="text"
+                              value={customCategoryName}
+                              onChange={(e) => setCustomCategoryName(e.target.value)}
+                              className="form-input text-sm"
+                              placeholder="Contoh: Investasi"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="form-label text-sm">Icon</label>
+                            <select
+                              value={customCategoryIcon}
+                              onChange={(e) => setCustomCategoryIcon(e.target.value)}
+                              className="form-select text-sm"
+                            >
+                              <option value="📋">📋 Clipboard</option>
+                              <option value="🏠">🏠 Home</option>
+                              <option value="🚗">🚗 Car</option>
+                              <option value="🛒">🛒 Shopping</option>
+                              <option value="🎮">🎮 Gaming</option>
+                              <option value="📚">📚 Education</option>
+                              <option value="🏥">🏥 Health</option>
+                              <option value="🎬">🎬 Entertainment</option>
+                              <option value="✈️">✈️ Travel</option>
+                              <option value="🍽️">🍽️ Dining</option>
+                              <option value="💼">💼 Business</option>
+                              <option value="🎨">🎨 Art</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2 mt-3">
+                          <button
+                            type="button"
+                            onClick={handleAddCustomCategory}
+                            className="btn btn-primary btn-sm"
+                          >
+                            Tambah Kategori
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowCustomCategory(false)}
+                            className="btn btn-outline btn-sm"
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="form-label">Tanggal</label>
