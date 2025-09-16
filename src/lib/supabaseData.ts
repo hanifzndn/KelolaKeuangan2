@@ -579,6 +579,10 @@ export const addBudget = async (userId: string, budget: Omit<Budget, 'id'>) => {
 }
 
 export const getBills = async (userId: string) => {
+  console.log('getBills called with userId:', userId);
+  console.log('Supabase available:', isSupabaseAvailable());
+  console.log('Supabase client:', supabase);
+  
   if (!isSupabaseAvailable() || !supabase) {
     // Only use mock data in development
     if (process.env.NODE_ENV === 'development') {
@@ -625,9 +629,12 @@ export const getBills = async (userId: string) => {
     .eq('user_id', userId)
 
   if (error) {
+    console.error('Error fetching bills:', error)
     throw error
   }
 
+  console.log('Bills data fetched:', data);
+  
   return data.map(bill => ({
     ...bill,
     dueDate: bill.due_date,

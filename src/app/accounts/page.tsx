@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFinance } from '../../context/FinanceContext';
 import ProtectedRoute from '../../components/ProtectedRoute';
 
@@ -13,7 +13,7 @@ export default function AccountsPage() {
 }
 
 function AccountsContent() {
-  const { accounts, addAccount, updateAccount, deleteAccount } = useFinance();
+  const { accounts, addAccount, updateAccount, deleteAccount, refreshData } = useFinance();
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingAccount, setEditingAccount] = useState<any>(null);
@@ -21,7 +21,12 @@ function AccountsContent() {
   const [type, setType] = useState<'cash' | 'bank' | 'credit' | 'investment'>('cash');
   const [balance, setBalance] = useState('');
 
-  const handleAddAccount = (e: React.FormEvent) => {
+  // Refresh data when component mounts
+  useEffect(() => {
+    refreshData();
+  }, []);
+
+  const handleAddAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!name || !balance) return;
@@ -33,11 +38,12 @@ function AccountsContent() {
       currency: 'IDR',
     };
     
-    addAccount(newAccount);
+    await addAccount(newAccount);
+    await refreshData(); // Refresh data after adding account
     resetForm();
   };
 
-  const handleEditAccount = (e: React.FormEvent) => {
+  const handleEditAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!editingAccount || !name || !balance) return;
@@ -49,14 +55,16 @@ function AccountsContent() {
       balance: parseFloat(balance),
     };
     
-    updateAccount(updatedAccount);
+    await updateAccount(updatedAccount);
+    await refreshData(); // Refresh data after updating account
     resetForm();
     setShowEditForm(false);
   };
 
-  const handleDeleteAccount = (accountId: string) => {
+  const handleDeleteAccount = async (accountId: string) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus akun ini?')) {
-      deleteAccount(accountId);
+      await deleteAccount(accountId);
+      await refreshData(); // Refresh data after deleting account
     }
   };
 

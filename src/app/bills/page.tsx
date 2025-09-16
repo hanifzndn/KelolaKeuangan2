@@ -14,7 +14,7 @@ export default function BillsPage() {
 }
 
 function BillsContent() {
-  const { bills, accounts, categories, addBill, updateBill, deleteBill, payBill } = useFinance();
+  const { bills, accounts, categories, addBill, updateBill, deleteBill, payBill, refreshData } = useFinance();
   const [activeTab, setActiveTab] = useState<'list' | 'add'>('list');
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -54,12 +54,12 @@ function BillsContent() {
     
     // Validate that accountId and categoryId are valid UUIDs
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(accountId)) {
+    if (accountId && !uuidRegex.test(accountId)) {
       setError('Invalid account selection');
       return;
     }
     
-    if (!uuidRegex.test(categoryId)) {
+    if (categoryId && !uuidRegex.test(categoryId)) {
       setError('Invalid category selection');
       return;
     }
@@ -168,10 +168,10 @@ function BillsContent() {
               setAmount('');
               setDueDate('');
               // Set default values when opening the form
-              if (accounts.length > 0) {
+              if (accounts.length > 0 && !accountId) {
                 setAccountId(accounts[0].id);
               }
-              if (categories.length > 0) {
+              if (categories.length > 0 && !categoryId) {
                 const utilitiesCategory = categories.find(cat => cat.name === 'Utilities');
                 if (utilitiesCategory) {
                   setCategoryId(utilitiesCategory.id);

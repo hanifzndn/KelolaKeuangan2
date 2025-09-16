@@ -195,6 +195,7 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
     dispatch({ type: 'SET_DATA', payload: { loading: true } });
     
     try {
+      console.log('Loading data for user:', user.id);
       const [accounts, transactions, budgets, bills, categories] = await Promise.all([
         getAccounts(user.id),
         getTransactions(user.id),
@@ -202,6 +203,8 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
         getBills(user.id),
         getCategories(),
       ]);
+      
+      console.log('Data loaded:', { accounts, transactions, budgets, bills, categories });
       
       dispatch({ 
         type: 'SET_DATA', 
@@ -223,6 +226,7 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
   // Load data when user is authenticated
   useEffect(() => {
     if (user) {
+      console.log('User authenticated, loading data...');
       refreshData();
     }
   }, [user]);
@@ -358,7 +362,10 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     
     try {
+      console.log('Adding bill for user:', user.id, bill);
       const result = await addBill(user.id, bill);
+      console.log('Bill added result:', result);
+      
       // Use the bill returned from the database which includes the generated ID
       if (result && result.length > 0) {
         const newBill: Bill = {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { useAuth } from '../context/AuthContext';
@@ -15,10 +15,15 @@ export default function Home() {
 }
 
 function DashboardContent() {
-  const { accounts, categories, transactions, budgets, bills, addTransaction, addAccount, addBudget, addCategory, getUpcomingBills } = useFinance();
+  const { accounts, categories, transactions, bills, budgets, addTransaction, addAccount, addCategory, getUpcomingBills, refreshData } = useFinance();
   const { user, logout } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'overview' | 'accounts' | 'transactions' | 'budgets'>('overview');
+  
+  // Refresh data when component mounts
+  useEffect(() => {
+    refreshData();
+  }, []);
   
   // Form states
   const [description, setDescription] = useState('');
@@ -114,15 +119,26 @@ function DashboardContent() {
             <h1 className="text-2xl font-bold text-gray-900">Dompet Keluarga</h1>
             <p className="text-sm text-gray-600">Selamat datang, {user?.name}</p>
           </div>
-          <button
-            onClick={logout}
-            className="btn btn-outline btn-sm"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Logout
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={refreshData}
+              className="btn btn-outline btn-sm"
+              title="Refresh Data"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+            <button
+              onClick={logout}
+              className="btn btn-outline btn-sm"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
@@ -167,19 +183,6 @@ function DashboardContent() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Pencatatan Transaksi
-          </button>
-          <button
-            onClick={() => setActiveTab('budgets')}
-            className={`mx-1 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-              activeTab === 'budgets'
-                ? 'bg-blue-500 text-white shadow-medium'
-                : 'bg-white text-gray-600 hover:bg-gray-100 shadow-light'
-            }`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            Anggaran
           </button>
         </div>
       </div>
@@ -368,6 +371,139 @@ function DashboardContent() {
                 )}
               </div>
             </div>
+
+            {/* Budget Summary */}
+            {budgets.length > 0 && (
+              <div className="card">
+                <div className="card-header">
+                  <h2 className="card-title flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Ringkasan Anggaran
+                  </h2>
+                </div>
+                <div className="card-body">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <div className="p-2 rounded-lg bg-blue-100 text-blue-600 mr-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Total Anggaran</p>
+                          <p className="text-lg font-bold text-gray-900">
+                            Rp {budgets.reduce((sum, budget) => sum + budget.amount, 0).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <div className="p-2 rounded-lg bg-green-100 text-green-600 mr-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Total Terpakai</p>
+                          <p className="text-lg font-bold text-gray-900">
+                            Rp {budgets.reduce((sum, budget) => {
+                              const spent = transactions
+                                .filter(t => 
+                                  t.categoryId === budget.categoryId && 
+                                  t.type === 'expense'
+                                )
+                                .reduce((acc, transaction) => acc + transaction.amount, 0);
+                              return sum + spent;
+                            }, 0).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <div className="p-2 rounded-lg bg-purple-100 text-purple-600 mr-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Kategori dengan Anggaran</p>
+                          <p className="text-lg font-bold text-gray-900">
+                            {new Set(budgets.map(b => b.categoryId)).size}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6">
+                    <h3 className="font-medium text-gray-900 mb-3">Anggaran Terbaru</h3>
+                    <div className="space-y-3">
+                      {budgets.slice(0, 3).map((budget) => {
+                        const category = categories.find(c => c.id === budget.categoryId);
+                        const spent = transactions
+                          .filter(t => 
+                            t.categoryId === budget.categoryId && 
+                            t.type === 'expense'
+                          )
+                          .reduce((sum, transaction) => sum + transaction.amount, 0);
+                        const remaining = budget.amount - spent;
+                        const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
+                        
+                        return (
+                          <div key={budget.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                            <div className="flex items-center">
+                              <div className={`p-2 rounded-lg mr-3 ${category?.color || 'bg-gray-500'}`}>
+                                <span className="text-white">{category?.icon || '📋'}</span>
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">{category?.name || 'Unknown Category'}</p>
+                                <p className="text-sm text-gray-500">
+                                  Rp {spent.toLocaleString()} dari Rp {budget.amount.toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center">
+                              <div className="w-24 mr-3">
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div 
+                                    className={`h-2 rounded-full ${
+                                      percentage <= 50 ? 'bg-green-500' : 
+                                      percentage <= 75 ? 'bg-yellow-500' : 
+                                      'bg-red-500'
+                                    }`} 
+                                    style={{ width: `${Math.min(percentage, 100)}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                              <span className={`font-medium ${
+                                remaining >= 0 ? 'text-green-600' : 'text-red-600'
+                              }`}>
+                                {percentage.toFixed(1)}%
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-4 text-center">
+                      <button 
+                        onClick={() => router.push('/budgets')}
+                        className="btn btn-outline btn-sm"
+                      >
+                        Lihat Semua Anggaran
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Recent Transactions */}
@@ -745,76 +881,18 @@ function DashboardContent() {
         {/* Budgets Tab */}
         {activeTab === 'budgets' && (
           <div className="space-y-6">
-            {/* Budget List */}
             <div className="card">
               <div className="card-header">
                 <h2 className="card-title">Anggaran</h2>
               </div>
-              <div className="card-body">
-                {budgets.length === 0 ? (
-                  <div className="text-center py-12">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    <h3 className="mt-4 text-lg font-medium text-gray-900">Belum ada anggaran</h3>
-                    <p className="mt-2 text-gray-600">Buat anggaran pertama Anda untuk mengelola pengeluaran</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="table">
-                      <thead className="table-header">
-                        <tr>
-                          <th className="table-head">Kategori</th>
-                          <th className="table-head">Anggaran</th>
-                          <th className="table-head">Terpakai</th>
-                          <th className="table-head">Sisa</th>
-                          <th className="table-head">Progress</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {budgets.map((budget) => {
-                          const category = categories.find(c => c.id === budget.categoryId);
-                          const spent = transactions
-                            .filter(t => t.categoryId === budget.categoryId && t.type === 'expense')
-                            .reduce((sum, transaction) => sum + transaction.amount, 0);
-                          const remaining = budget.amount - spent;
-                          const percentage = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
-                          
-                          return (
-                            <tr key={budget.id} className="hover:bg-gray-50">
-                              <td className="table-cell">
-                                <div className="flex items-center">
-                                  <span className="mr-2">{category?.icon}</span>
-                                  <span className="font-medium text-gray-900">{category?.name}</span>
-                                </div>
-                              </td>
-                              <td className="table-cell text-gray-600">Rp {budget.amount.toLocaleString()}</td>
-                              <td className="table-cell text-gray-600">Rp {spent.toLocaleString()}</td>
-                              <td className={`table-cell font-medium ${
-                                remaining >= 0 ? 'text-green-600' : 'text-red-600'
-                              }`}>
-                                Rp {remaining.toLocaleString()}
-                              </td>
-                              <td className="table-cell">
-                                <div className="w-full">
-                                  <div className="progress-bar">
-                                    <div 
-                                      className={`progress-fill ${
-                                        percentage > 90 ? 'bg-red-500' : percentage > 75 ? 'bg-yellow-500' : 'bg-green-500'
-                                      }`} 
-                                      style={{ width: `${Math.min(percentage, 100)}%` }}
-                                    ></div>
-                                  </div>
-                                  <div className="text-xs text-gray-500 mt-1">{percentage.toFixed(1)}%</div>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+              <div className="card-body text-center">
+                <p className="text-gray-600 mb-4">Kelola anggaran Anda di halaman khusus</p>
+                <button 
+                  onClick={() => router.push('/budgets')}
+                  className="btn btn-primary"
+                >
+                  Lihat Anggaran
+                </button>
               </div>
             </div>
           </div>
