@@ -3,10 +3,6 @@ const withPWA = require('next-pwa')({
   disable: process.env.NODE_ENV === 'development',
   register: true,
   skipWaiting: true,
-  // Add modern meta tags and remove deprecated ones
-  manifest: {
-    // This will help ensure modern meta tags are used
-  }
 })
 
 /** @type {import('next').NextConfig} */

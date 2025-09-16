@@ -42,6 +42,9 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         {/* Format detection for telephone numbers */}
         <meta name="format-detection" content="telephone=no" />
+        {/* Additional meta tags for better PWA support */}
+        <meta name="apple-mobile-web-app-title" content="Dompet Keluarga" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className={inter.className}>
         <AuthProvider>
