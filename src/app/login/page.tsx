@@ -96,7 +96,6 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="form-input pl-10"
-                    placeholder="&nbsp;&nbsp;contoh@email.com"
                   />
                 </div>
               </div>
@@ -118,7 +117,6 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="form-input pl-10"
-                    placeholder="&nbsp;&nbsp;Masukkan password Anda"
                   />
                 </div>
               </div>
